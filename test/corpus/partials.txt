@@ -1,0 +1,241 @@
+==================
+Bare Partial
+==================
+{{> nav}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)))
+
+==================
+Partial with Hash Argument
+==================
+{{> nav links=customLinks}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)
+    (hash_pair
+      key: (identifier)
+      value: (identifier))))
+
+==================
+Partial with Positional and Hash Arguments
+==================
+{{> nav foo bar key=value}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)
+    argument: (identifier)
+    argument: (identifier)
+    (hash_pair
+      key: (identifier)
+      value: (identifier))))
+
+==================
+Partial with Slash-Separated Path Name
+==================
+{{> partials/header}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)))
+
+==================
+Partial Consuming Whitespace
+==================
+{{~> nav ~}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)))
+
+==================
+Dynamic Partial via Sub Expression
+==================
+{{> (lookup this "partial") key=value}}
+---
+
+(template
+  (partial_statement
+    name: (sub_expression
+      (helper_invocation
+        helper: (identifier)
+        argument: (identifier)
+        argument: (string_literal)))
+    (hash_pair
+      key: (identifier)
+      value: (identifier))))
+
+==================
+Partial as Element Child
+==================
+<nav>{{> menu}}</nav>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name))
+    (partial_statement
+      name: (partial_name))
+    (element_node_end
+      (tag_name))))
+
+==================
+Partial inside Block Statement
+==================
+{{#if showNav}}{{> nav}}{{/if}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier)
+      argument: (identifier))
+    program: (partial_statement
+      name: (partial_name))
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Partial with a bare parent-context argument
+==================
+{{> galleryBox ..}}
+---
+
+(template
+  (partial_statement
+    name: (partial_name)
+    argument: (parent_path)))
+
+==================
+Partial Block
+==================
+{{#> layout}}<p>Hi</p>{{/layout}}
+---
+
+(template
+  (partial_block_statement
+    (partial_block_statement_start
+      (partial_name))
+    (element_node
+      (element_node_start
+        (tag_name))
+      (text_node)
+      (element_node_end
+        (tag_name)))
+    (partial_block_statement_end
+      (partial_name))))
+
+==================
+Partial Block with Hash Arguments and Nested Block
+==================
+{{#> mediaCarousel sectionId="tour" titleKey="labels.TOUR"}}
+  {{#each tours}}
+    <div class="swiper-slide">{{this.title}}</div>
+  {{/each}}
+{{/mediaCarousel}}
+---
+
+(template
+  (partial_block_statement
+    (partial_block_statement_start
+      (partial_name)
+      (hash_pair
+        (identifier)
+        (string_literal))
+      (hash_pair
+        (identifier)
+        (string_literal)))
+    (text_node)
+    (block_statement
+      (block_statement_start
+        (identifier)
+        (identifier))
+      (text_node)
+      (element_node
+        (element_node_start
+          (tag_name)
+          (attribute_node
+            (attribute_name)
+            (concat_statement)))
+        (mustache_statement
+          (path_expression
+            (identifier)
+            (identifier)))
+        (element_node_end
+          (tag_name)))
+      (text_node)
+      (block_statement_end
+        (identifier)))
+    (text_node)
+    (partial_block_statement_end
+      (partial_name))))
+
+==================
+Partial Block with Slash-Separated Path Name
+==================
+{{#> partials/header}}fallback{{/partials/header}}
+---
+
+(template
+  (partial_block_statement
+    (partial_block_statement_start
+      (partial_name))
+    (text_node)
+    (partial_block_statement_end
+      (partial_name))))
+
+==================
+Partial Block Consuming Whitespace
+==================
+{{~#> nav ~}}content{{~/nav~}}
+---
+
+(template
+  (partial_block_statement
+    (partial_block_statement_start
+      (partial_name))
+    (text_node)
+    (partial_block_statement_end
+      (partial_name))))
+
+==================
+Dynamic Partial Block via Sub Expression
+==================
+{{#> (lookup this "layout")}}content{{/layout}}
+---
+
+(template
+  (partial_block_statement
+    (partial_block_statement_start
+      (sub_expression
+        (helper_invocation
+          (identifier)
+          (identifier)
+          (string_literal))))
+    (text_node)
+    (partial_block_statement_end
+      (partial_name))))
+
+==================
+Partial Block Reference inside a Layout Partial
+==================
+<main>{{> @partial-block}}</main>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name))
+    (partial_statement
+      (partial_name))
+    (element_node_end
+      (tag_name))))

@@ -58,3 +58,93 @@ Consuming Whitespace
     program: (text_node)
     (block_statement_end
       path: (identifier))))
+
+==================
+If Else Statement
+==================
+{{#if condition}}
+  A
+{{else}}
+  B
+{{/if}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier)
+      argument: (identifier))
+    program: (text_node)
+    (else_statement)
+    program: (text_node)
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Else If Chain
+==================
+{{#if a}}
+  A
+{{else if b}}
+  B
+{{else}}
+  C
+{{/if}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier)
+      argument: (identifier))
+    program: (text_node)
+    (else_statement
+      (helper_invocation
+        helper: (identifier)
+        argument: (identifier)))
+    program: (text_node)
+    (else_statement)
+    program: (text_node)
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Else with Whitespace Control
+==================
+{{#if x}}a{{~else~}}b{{/if}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier)
+      argument: (identifier))
+    program: (text_node)
+    (else_statement)
+    program: (text_node)
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Block Without Arguments
+==================
+{{#foo}}bar{{/foo}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier))
+    program: (text_node)
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Else Outside a Block is an Identifier
+==================
+{{else}}
+---
+
+(template
+  (mustache_statement
+    (identifier)))

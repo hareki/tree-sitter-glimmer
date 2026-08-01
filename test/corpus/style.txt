@@ -4,7 +4,7 @@ Style Element
 <style>
   div {}
   p {}
-  /* dynamic -> {{ }} <- dynamic */
+  {{#each theme}}{{this.k}}: {{this.v}};{{/each}}
   /* comment */
 </style>
 ---
@@ -13,5 +13,83 @@ Style Element
   (style_element
       (start_tag (tag_name))
       (raw_text)
+      (block_statement
+        (block_statement_start
+          path: (identifier)
+          argument: (identifier))
+        program: (mustache_statement (path_expression (identifier) (identifier)))
+        program: (text_node)
+        program: (mustache_statement (path_expression (identifier) (identifier)))
+        program: (text_node)
+        (block_statement_end
+          path: (identifier)))
+      (raw_text)
       (end_tag (tag_name)))
 )
+
+==================
+Style Element without Mustaches
+==================
+<style>
+  div {}
+  p {}
+  /* comment */
+</style>
+---
+
+(template
+  (style_element
+    (start_tag
+      (tag_name))
+    (raw_text)
+    (end_tag
+      (tag_name))))
+
+==================
+Empty Style Element
+==================
+<style></style>
+---
+
+(template
+  (style_element
+    (start_tag
+      (tag_name))
+    (end_tag
+      (tag_name))))
+
+==================
+Script Element with Mustaches
+==================
+<script>var host = '{{host}}';</script>
+---
+
+(template
+  (script_element
+    (start_tag
+      (tag_name))
+    (raw_text)
+    (mustache_statement
+      (identifier))
+    (raw_text)
+    (end_tag
+      (tag_name))))
+
+==================
+Triple Mustache in a Script Element
+==================
+<script>x = {{{json y}}};</script>
+---
+
+(template
+  (script_element
+    (start_tag
+      (tag_name))
+    (raw_text)
+    (mustache_statement
+      (helper_invocation
+        helper: (identifier)
+        argument: (identifier)))
+    (raw_text)
+    (end_tag
+      (tag_name))))

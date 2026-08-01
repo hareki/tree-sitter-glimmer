@@ -52,3 +52,107 @@ Consuming Whitespace
 (template
   (mustache_statement
     (identifier)))
+
+==================
+Triple Mustache (unescaped output)
+==================
+{{{embedded.link}}}
+---
+
+(template
+  (mustache_statement
+    (path_expression
+      (identifier)
+      (identifier))))
+
+==================
+Triple Mustache with a helper
+==================
+{{{json data}}}
+---
+
+(template
+  (mustache_statement
+    (helper_invocation
+      helper: (identifier)
+      argument: (identifier))))
+
+==================
+Parent-context path in a mustache
+==================
+{{../host}}
+---
+
+(template
+  (mustache_statement
+    (parent_path)))
+
+==================
+Grandparent-context path with members
+==================
+{{../../foo.bar}}
+---
+
+(template
+  (mustache_statement
+    (parent_path)))
+
+==================
+Parent-context path as a block argument
+==================
+{{#if ../branded}}b{{/if}}
+---
+
+(template
+  (block_statement
+    (block_statement_start
+      path: (identifier)
+      argument: (parent_path))
+    program: (text_node)
+    (block_statement_end
+      path: (identifier))))
+
+==================
+Raw block
+==================
+{{{{raw}}}}{{not evaluated}}{{{{/raw}}}}
+---
+
+(template
+  (raw_block_statement
+    (raw_block_statement_start
+      path: (identifier))
+    (raw_block_text)
+    (raw_block_statement_end
+      path: (identifier))))
+
+==================
+Raw block with arguments
+==================
+{{{{raw foo bar=1}}}}text{{{{/raw}}}}
+---
+
+(template
+  (raw_block_statement
+    (raw_block_statement_start
+      path: (identifier)
+      argument: (identifier)
+      (hash_pair
+        key: (identifier)
+        value: (number_literal)))
+    (raw_block_text)
+    (raw_block_statement_end
+      path: (identifier))))
+
+==================
+Empty raw block has no body node
+==================
+{{{{raw}}}}{{{{/raw}}}}
+---
+
+(template
+  (raw_block_statement
+    (raw_block_statement_start
+      path: (identifier))
+    (raw_block_statement_end
+      path: (identifier))))

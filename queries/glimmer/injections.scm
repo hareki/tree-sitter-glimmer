@@ -6,6 +6,7 @@
 ((style_element
   (raw_text) @injection.content)
  (#set! injection.language "css")
+ (#set! injection.combined)
  (#set! injection.include-children)
  )
 
@@ -13,5 +14,6 @@
 ((script_element
   (raw_text) @injection.content)
  (#set! injection.language "javascript")
+ (#set! injection.combined)
  (#set! injection.include-children)
 )

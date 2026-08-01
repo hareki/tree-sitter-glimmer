@@ -38,7 +38,8 @@
     "pretest": "node-gyp-build",
     "test": "npm run test:node && npm run test:parser",
     "test:node": "node --test bindings/node/*_test.js",
-    "test:parser": "tree-sitter test --config-path ./test/config.json"
+    "test:parser": "tree-sitter test --config-path ./test/config.json",
+    "test:scan": "node scripts/scan-errors.mjs"
   },
   "dependencies": {
     "node-addon-api": "^8.5.0",

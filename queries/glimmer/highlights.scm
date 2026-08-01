@@ -9,6 +9,9 @@
 ((tag_name) @tag
   (#match? @tag "^:?[a-z]"))
 
+; === Doctype ===
+(doctype) @keyword
+
 (attribute_name) @attribute
 
 (string_literal) @string
@@ -18,6 +21,9 @@
 (boolean_literal) @boolean
 
 (concat_statement) @string
+
+; Unquoted attribute values (`<a href=foo.html>`) read like quoted ones
+(attribute_value) @string
 
 ; === Block Statements ===
 ; Highlight the brackets
@@ -40,9 +46,10 @@
   (identifier) @keyword.conditional)
   (#eq? @keyword.conditional "if"))
 
-((mustache_statement
-  (identifier) @keyword.conditional)
-  (#eq? @keyword.conditional "else"))
+(else_statement) @tag.delimiter
+
+(else_statement
+  "else" @keyword.conditional)
 
 ; == Mustache Statements ===
 ; Highlight the whole statement, to color brackets and separators
@@ -55,32 +62,55 @@
       (identifier) @variable)
     (identifier) @variable
   ])
-  (#not-any-of? @variable "yield" "outlet" "this" "else"))
+  (#not-any-of? @variable "yield" "outlet" "this"))
 
-; As are arguments in a block statement
-(block_statement_start
-  argument: [
-    (path_expression
-      (identifier) @variable)
-    (identifier) @variable
-  ])
+; As are positional arguments to blocks, helpers, and partials. The parents
+; are listed explicitly rather than as a wildcard `(_)` so the query engine
+; can index each pattern by its root symbol instead of testing every node;
+; only rules that use `_arguments` ever carry an `argument:` field.
+([
+  (block_statement_start
+    argument: [
+      (path_expression
+        (identifier) @variable)
+      (identifier) @variable
+    ])
+  (helper_invocation
+    argument: [
+      (path_expression
+        (identifier) @variable)
+      (identifier) @variable
+    ])
+  (partial_statement
+    argument: [
+      (path_expression
+        (identifier) @variable)
+      (identifier) @variable
+    ])
+  (partial_block_statement_start
+    argument: [
+      (path_expression
+        (identifier) @variable)
+      (identifier) @variable
+    ])
+  (raw_block_statement_start
+    argument: [
+      (path_expression
+        (identifier) @variable)
+      (identifier) @variable
+    ])
+] (#not-eq? @variable "this"))
 
 ; As is an identifier in a block param
 (block_params
   (identifier) @variable)
 
-; As are helper arguments
-((helper_invocation
-  argument: [
-    (path_expression
-      (identifier) @variable)
-    (identifier) @variable
-  ])
-  (#not-eq? @variable "this"))
-
 ; `this` should be highlighted as a built-in variable
 ((identifier) @variable.builtin
   (#eq? @variable.builtin "this"))
+
+; Parent-context path references (`..`, `../foo`) behave like variables
+(parent_path) @variable
 
 ; If the identifier is just "yield" or "outlet", it's a keyword
 ((mustache_statement
@@ -104,8 +134,42 @@
   helper: (identifier) @keyword)
   (#eq? @keyword "yield"))
 
+; === Partial Statements ===
+; Highlight the whole statement, to color the `{{>` brackets and separators
+(partial_statement) @tag.delimiter
+
+; Partial blocks: highlight the brackets like other block statements
+(partial_block_statement_start) @tag.delimiter
+
+(partial_block_statement_end) @tag.delimiter
+
+; The partial being invoked
+(partial_name) @function
+
+; === Raw Block Statements ===
+; `{{{{raw}}}} ... {{{{/raw}}}}`; the body is emitted verbatim and stays
+; unhighlighted, but the delimiters and helper name read like other blocks
+(raw_block_statement_start) @tag.delimiter
+
+(raw_block_statement_end) @tag.delimiter
+
+(raw_block_statement_start
+  path: (identifier) @keyword)
+
+(raw_block_statement_end
+  path: (identifier) @keyword)
+
 (hash_pair
   key: (identifier) @property)
+
+; Hash values are variables, in any statement type
+((hash_pair
+  value: [
+    (path_expression
+      (identifier) @variable)
+    (identifier) @variable
+  ])
+  (#not-eq? @variable "this"))
 
 (comment_statement) @comment
 
