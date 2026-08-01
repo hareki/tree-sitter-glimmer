@@ -119,3 +119,31 @@ Void Elements
   (element_node
     (element_node_void
       (tag_name))))
+
+==================
+Void Elements without a self-closing slash
+==================
+<meta charset="UTF-8">
+<br>
+---
+
+(template
+  (element_node
+    (element_node_void
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (concat_statement))))
+  (text_node)
+  (element_node
+    (element_node_void
+      (tag_name))))
+
+==================
+Doctype declaration
+==================
+<!DOCTYPE html>
+---
+
+(template
+  (doctype))

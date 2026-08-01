@@ -162,3 +162,238 @@ Splattributes
     (element_node_end
       (tag_name))))
 
+
+==================
+Block Statement inside an Attribute Value
+==================
+<a class="x {{#if b}}{{else}}u{{/if}}">y</a>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (concat_statement
+          (block_statement
+            (block_statement_start
+              path: (identifier)
+              argument: (identifier))
+            (else_statement)
+            program: (text_node)
+            (block_statement_end
+              path: (identifier))))))
+    (text_node)
+    (element_node_end
+      (tag_name))))
+
+==================
+Partial inside an Attribute Value
+==================
+<div class="{{> icon}}"></div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (concat_statement
+          (partial_statement
+            name: (partial_name)))))
+    (element_node_end
+      (tag_name))))
+
+==================
+Block Statement wrapping an Attribute
+==================
+<div {{#if galleryGroup}}data-gallery-index="{{galleryGroup}}"{{/if}}></div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (block_statement
+        (block_statement_start
+          path: (identifier)
+          argument: (identifier))
+        program: (attribute_node
+          (attribute_name)
+          (concat_statement
+            (mustache_statement
+              (identifier))))
+        (block_statement_end
+          path: (identifier))))
+    (element_node_end
+      (tag_name))))
+
+==================
+Partial Block wrapping an Attribute
+==================
+<div {{#> layout}}data-a="1"{{/layout}}></div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (partial_block_statement
+        (partial_block_statement_start
+          name: (partial_name))
+        program: (attribute_node
+          (attribute_name)
+          (concat_statement))
+        (partial_block_statement_end
+          name: (partial_name))))
+    (element_node_end
+      (tag_name))))
+
+==================
+Unquoted Attribute Value
+==================
+<a href=foo.html></a>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (attribute_value)))
+    (element_node_end
+      (tag_name))))
+
+==================
+Unquoted Attribute Value on a Void Element
+==================
+<img src=logo.png/>
+---
+
+(template
+  (element_node
+    (element_node_void
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (attribute_value)))))
+
+==================
+Mustache as an Attribute Name
+==================
+<div {{attrName}}="x"></div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        name: (mustache_statement
+          (identifier))
+        (concat_statement)))
+    (element_node_end
+      (tag_name))))
+
+==================
+Bare Mustache stays a Tag Body Statement
+==================
+<div {{modifier}}></div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (mustache_statement
+        (identifier)))
+    (element_node_end
+      (tag_name))))
+
+==================
+Unquoted Attribute Value with Slashes
+==================
+<a href=/path/to/x></a>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (attribute_value)))
+    (element_node_end
+      (tag_name))))
+
+==================
+Unquoted Attribute Value does not swallow a Self-Closing Slash
+==================
+<Foo bar=baz/>
+---
+
+(template
+  (element_node
+    (element_node_void
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (attribute_value)))))
+
+==================
+Else Splitting a Block inside an Attribute Value
+==================
+<a href="{{#if x}}{{a}}{{else}}{{b}}{{/if}}">z</a>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (attribute_node
+        (attribute_name)
+        (concat_statement
+          (block_statement
+            (block_statement_start
+              path: (identifier)
+              argument: (identifier))
+            program: (mustache_statement
+              (identifier))
+            (else_statement)
+            program: (mustache_statement
+              (identifier))
+            (block_statement_end
+              path: (identifier))))))
+    (text_node)
+    (element_node_end
+      (tag_name))))
+
+==================
+Else Splitting a Block wrapping an Attribute
+==================
+<div {{#if x}}a="1"{{else}}b="2"{{/if}}>hi</div>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name)
+      (block_statement
+        (block_statement_start
+          path: (identifier)
+          argument: (identifier))
+        program: (attribute_node
+          (attribute_name)
+          (concat_statement))
+        (else_statement)
+        program: (attribute_node
+          (attribute_name)
+          (concat_statement))
+        (block_statement_end
+          path: (identifier))))
+    (text_node)
+    (element_node_end
+      (tag_name))))

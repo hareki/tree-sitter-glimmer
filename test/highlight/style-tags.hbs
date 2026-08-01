@@ -12,3 +12,13 @@
     p {}
 </style>
 
+
+<style>
+  :root {
+    {{#each theme}}
+      {{! ^ keyword }}
+      {{this.k}}: {{this.v}};
+      {{! ^ variable.builtin }}
+    {{/each}}
+  }
+</style>

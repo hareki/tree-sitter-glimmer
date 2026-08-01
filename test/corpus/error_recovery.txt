@@ -1,0 +1,69 @@
+; A syntax error must stay local. The external scanner is offered every token
+; while tree-sitter recovers, so an unguarded `raw_text` scan would run far
+; outside any <style>/<script> and swallow the rest of the file into one
+; unhighlighted token. These tests assert that the markup *after* an error still
+; parses into real nodes, which is what keeps highlighting alive in a file that
+; uses a construct the grammar does not know yet.
+
+==================
+Error recovery stops at the bad construct
+==================
+<div {{bogus
+<span>after</span>
+---
+
+(template
+  (ERROR
+    (tag_name)
+    (identifier))
+  (text_node)
+  (element_node
+    (element_node_start
+      (tag_name))
+    (text_node)
+    (element_node_end
+      (tag_name))))
+
+==================
+Error recovery after an unbalanced end tag
+==================
+<div>a</div></div>
+<p>after</p>
+---
+
+(template
+  (element_node
+    (element_node_start
+      (tag_name))
+    (text_node)
+    (element_node_end
+      (tag_name)))
+  (ERROR
+    (identifier))
+  (text_node)
+  (element_node
+    (element_node_start
+      (tag_name))
+    (text_node)
+    (element_node_end
+      (tag_name))))
+
+==================
+Unterminated raw block does not swallow the file
+==================
+{{{{raw}}}}unterminated
+<p>after</p>
+---
+
+(template
+  (ERROR
+    (raw_block_statement_start
+      path: (identifier))
+    (identifier))
+  (text_node)
+  (element_node
+    (element_node_start
+      (tag_name))
+    (text_node)
+    (element_node_end
+      (tag_name))))

@@ -6,6 +6,7 @@
 enum TokenType {
     COMMENT,
     RAW_TEXT,
+    RAW_BLOCK_TEXT,
 };
 
 void *tree_sitter_glimmer_external_scanner_create() { return NULL; }
@@ -27,11 +28,15 @@ static bool scan_raw_text(TSLexer *lexer) {
 
     const char *style_end = "</STYLE";
     const char *script_end = "</SCRIPT";
+    const char *mustache_start = "{{";
     const unsigned style_end_len = (unsigned)strlen(style_end);
     const unsigned script_end_len = (unsigned)strlen(script_end);
+    const unsigned mustache_start_len = (unsigned)strlen(mustache_start);
 
     unsigned style_i = 0;
     unsigned script_i = 0;
+    unsigned mustache_i = 0;
+    bool marked = false;
 
     while (lexer->lookahead) {
         const wint_t c = towupper(lexer->lookahead);
@@ -48,20 +53,83 @@ static bool scan_raw_text(TSLexer *lexer) {
             script_i = (c == (wint_t)script_end[0]) ? 1 : 0;
         }
 
-        if (style_i == style_end_len || script_i == script_end_len) {
+        if (c == (wint_t)mustache_start[mustache_i]) {
+            mustache_i++;
+        } else {
+            mustache_i = (c == (wint_t)mustache_start[0]) ? 1 : 0;
+        }
+
+        if (style_i == style_end_len || script_i == script_end_len ||
+            mustache_i == mustache_start_len) {
             break;
         }
 
         advance(lexer);
 
         // Only mark the end once we are sure the consumed characters cannot be
-        // the beginning of a closing delimiter.
-        if (style_i == 0 && script_i == 0) {
+        // the beginning of a closing delimiter or a mustache opener.
+        if (style_i == 0 && script_i == 0 && mustache_i == 0) {
             lexer->mark_end(lexer);
+            marked = true;
         }
     }
 
+    // Never emit a zero-width fragment: the element body is a repeat now, so a
+    // zero-width token would loop forever. Returning false hands the `{{`, the
+    // closing tag, or EOF back to the parser.
+    if (!marked) {
+        return false;
+    }
+
     lexer->result_symbol = RAW_TEXT;
+    return true;
+}
+
+static bool scan_raw_block_text(TSLexer *lexer) {
+    // Scan the body of a Handlebars raw block (`{{{{raw}}}} ... {{{{/raw}}}}`),
+    // stopping before the `{{{{/` closer. The body is emitted verbatim, so no
+    // mustache inside it is evaluated.
+    lexer->mark_end(lexer);
+
+    const char *block_end = "{{{{/";
+    const unsigned block_end_len = (unsigned)strlen(block_end);
+
+    unsigned i = 0;
+    bool marked = false;
+
+    while (lexer->lookahead) {
+        if (lexer->lookahead == block_end[i]) {
+            i++;
+        } else {
+            i = (lexer->lookahead == block_end[0]) ? 1 : 0;
+        }
+
+        if (i == block_end_len) {
+            break;
+        }
+
+        advance(lexer);
+
+        // Only mark the end once the consumed characters cannot be the
+        // beginning of the closing delimiter.
+        if (i == 0) {
+            lexer->mark_end(lexer);
+            marked = true;
+        }
+    }
+
+    // An unterminated raw block is a syntax error, not an empty body: leave the
+    // token unmatched so the parser can report it where it starts. An empty
+    // body (`{{{{raw}}}}{{{{/raw}}}}`) is likewise left to the grammar's
+    // `optional()`. `marked`, not the number of characters advanced over, is
+    // what decides this: the closer's own characters are advanced past without
+    // ever moving the marked end, so counting advances would call an empty body
+    // non-empty and emit a zero-width node.
+    if (i != block_end_len || !marked) {
+        return false;
+    }
+
+    lexer->result_symbol = RAW_BLOCK_TEXT;
     return true;
 }
 
@@ -181,10 +249,23 @@ static bool scan_handlebars_comment(TSLexer *lexer) {
 
 bool tree_sitter_glimmer_external_scanner_scan(void *payload, TSLexer *lexer,
                                                   const bool *valid_symbols) {
+    // Tree-sitter marks *every* external token valid at once while recovering
+    // from a syntax error. The raw scanners must not run then: they consume
+    // until their (possibly absent) terminator, so a single bad construct would
+    // swallow the rest of the file into one unhighlighted token. In their real
+    // positions -- directly after a `<style>`/`<script>` start tag, or after a
+    // raw block's opener -- COMMENT is never valid, so seeing COMMENT alongside
+    // a raw token is a reliable "we are recovering" signal.
+    const bool in_error_recovery = valid_symbols[COMMENT];
+
     // When parsing a <style> element's content, the grammar expects a single
     // RAW_TEXT token that includes whitespace.
-    if (valid_symbols[RAW_TEXT]) {
+    if (valid_symbols[RAW_TEXT] && !in_error_recovery) {
         return scan_raw_text(lexer);
+    }
+
+    if (valid_symbols[RAW_BLOCK_TEXT] && !in_error_recovery) {
+        return scan_raw_block_text(lexer);
     }
 
     // Eat whitespace for the comment token. Note: raw text must *not* take

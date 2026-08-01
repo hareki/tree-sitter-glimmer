@@ -2,3 +2,10 @@
   function hello() {
   }
 </script>
+
+<script>
+  {{#if host}}
+    var host = '{{host}}';
+    {{!           ^ variable }}
+  {{/if}}
+</script>

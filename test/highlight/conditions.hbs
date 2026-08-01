@@ -7,3 +7,12 @@
 {{/if}}
 {{! <- @tag.delimiter }}
 {{! ^ keyword.conditional }}
+
+{{#if a}}
+{{else if b}}
+{{! ^ keyword.conditional }}
+{{!    ^ keyword.conditional }}
+{{!       ^ variable }}
+{{else}}
+{{! ^ keyword.conditional }}
+{{/if}}
